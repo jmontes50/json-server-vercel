@@ -1,31 +1,52 @@
 // See https://github.com/typicode/json-server#module
-const jsonServer = require('json-server')
+const jsonServer = require('json-server');
+const jsonServerAuth = require('json-server-auth');
+const fs = require('fs');
+const path = require('path');
+const bcrypt = require('bcrypt');
 
-const server = jsonServer.create()
+const server = jsonServer.create();
+const router = jsonServer.router('db.json');
+const middlewares = jsonServer.defaults();
 
-// Uncomment to allow write operations
-// const fs = require('fs')
-// const path = require('path')
-// const filePath = path.join('db.json')
-// const data = fs.readFileSync(filePath, "utf-8");
-// const db = JSON.parse(data);
-// const router = jsonServer.router(db)
+// Cargar reglas de permisos desde routes.json
+const rules = jsonServerAuth.rewriter(JSON.parse(fs.readFileSync(path.join(__dirname, '../routes.json'))));
 
-// Comment out to allow write operations
-const router = jsonServer.router('db.json')
-
-const middlewares = jsonServer.defaults()
-
-server.use(middlewares)
-// Add this before server.use(router)
+server.use(middlewares);
+server.use(rules); // Aplicar las reglas de permisos antes del router
 server.use(jsonServer.rewriter({
     '/api/*': '/$1',
     '/blog/:resource/:id/show': '/:resource/:id'
-}))
-server.use(router)
+}));
+
+server.db = router.db; // Necesario para json-server-auth
+server.use(jsonServerAuth);
+server.use(router);
+
+server.post('/register', (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const users = server.db.get('users').value();
+    const userExists = users.some(user => user.email === email);
+
+    if (userExists) {
+        return res.status(400).json({ error: 'User already exists' });
+    }
+
+    const hashedPassword = bcrypt.hashSync(password, 5);
+    const newUser = { id: Date.now(), email, password: hashedPassword };
+
+    server.db.get('users').push(newUser).write();
+    res.status(201).json(newUser);
+});
+
 server.listen(3000, () => {
-    console.log('JSON Server is running')
-})
+    console.log('JSON Server is running');
+});
 
 // Export the Server API
-module.exports = server
+module.exports = server;

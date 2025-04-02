@@ -359,6 +359,11 @@
       "cantidad": 130,
       "estrellas": 5,
       "categoryId": 5
+    },
+    {
+      "email": "user1@example.com",
+      "password": "password1",
+      "id": 31
     }
   ],
   "categories": [
@@ -393,6 +398,12 @@
       "imagen": "https://loremflickr.com/640/480/product"
     }
   ],
-
-  "orders": []
+  "orders": [],
+  "users": [
+    {
+      "email": "user11@example.com",
+      "password": "$2a$10$cMm66MaS/MUW069./9rUYuhcg6/O2IpsGx6pkh6quGVJtSF7taK5q",
+      "id": 1
+    }
+  ]
 }
