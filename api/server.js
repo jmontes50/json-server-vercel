@@ -9,6 +9,17 @@ const server = jsonServer.create();
 const router = jsonServer.router('db.json');
 const middlewares = jsonServer.defaults();
 
+// Middleware para asegurarse de que la colección "users" exista
+server.use((req, res, next) => {
+    if (!router.db.get('users').value()) {
+        router.db.set('users', []).write();
+    }
+    next();
+});
+
+// Inicializar la base de datos para json-server-auth
+server.db = router.db; // Necesario para json-server-auth
+
 // Cargar reglas de permisos desde routes.json
 const rules = jsonServerAuth.rewriter(JSON.parse(fs.readFileSync(path.join(__dirname, '../routes.json'))));
 
@@ -19,7 +30,6 @@ server.use(jsonServer.rewriter({
     '/blog/:resource/:id/show': '/:resource/:id'
 }));
 
-server.db = router.db; // Necesario para json-server-auth
 server.use(jsonServerAuth);
 
 // Middleware para calcular y devolver el número total de páginas en las solicitudes de productos
@@ -37,7 +47,7 @@ server.use((req, res, next) => {
 server.use(router);
 
 server.post('/register', (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, name } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
@@ -51,7 +61,7 @@ server.post('/register', (req, res) => {
     }
 
     const hashedPassword = bcrypt.hashSync(password, 5);
-    const newUser = { id: Date.now(), email, password: hashedPassword };
+    const newUser = { id: Date.now(), email, password: hashedPassword, name: name || '' };
 
     server.db.get('users').push(newUser).write();
     res.status(201).json(newUser);

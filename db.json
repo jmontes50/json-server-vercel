@@ -359,11 +359,6 @@
       "cantidad": 130,
       "estrellas": 5,
       "categoryId": 5
-    },
-    {
-      "email": "user1@example.com",
-      "password": "password1",
-      "id": 31
     }
   ],
   "categories": [
