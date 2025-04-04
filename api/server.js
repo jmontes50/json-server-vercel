@@ -21,6 +21,19 @@ server.use(jsonServer.rewriter({
 
 server.db = router.db; // Necesario para json-server-auth
 server.use(jsonServerAuth);
+
+// Middleware para calcular y devolver el número total de páginas en las solicitudes de productos
+server.use((req, res, next) => {
+    if (req.method === 'GET' && req.path === '/products') {
+        const totalItems = server.db.get('products').size().value();
+        const limit = parseInt(req.query._limit, 10) || totalItems;
+        const totalPages = Math.ceil(totalItems / limit);
+
+        res.setHeader('X-Total-Pages', totalPages); // Agregar encabezado con el total de páginas
+    }
+    next();
+});
+
 server.use(router);
 
 server.post('/register', (req, res) => {
