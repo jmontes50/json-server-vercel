@@ -24,6 +24,13 @@ server.db = router.db; // Necesario para json-server-auth
 const rules = jsonServerAuth.rewriter(JSON.parse(fs.readFileSync(path.join(__dirname, '../routes.json'))));
 
 server.use(middlewares);
+
+server.use((req, res, next) => {
+    res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count');
+    res.setHeader('Access-Control-Expose-Headers', 'X-Total-Pages');
+    next();
+  });
+
 server.use(rules); // Aplicar las reglas de permisos antes del router
 server.use(jsonServer.rewriter({
     '/api/*': '/$1',
