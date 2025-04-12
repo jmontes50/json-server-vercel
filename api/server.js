@@ -38,12 +38,6 @@ server.use((req, res, next) => {
     next();
 });
 
-server.use((req, res, next) => {
-    res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count');
-    res.setHeader('Access-Control-Expose-Headers', 'X-Total-Pages');
-    next();
-  });
-
 server.use(rules); // Aplicar las reglas de permisos antes del router
 server.use(jsonServer.rewriter({
     '/api/*': '/$1',
