@@ -26,17 +26,12 @@ const rules = jsonServerAuth.rewriter(JSON.parse(fs.readFileSync(path.join(__dir
 server.use(middlewares);
 
 server.use((req, res, next) => {
-    const allowedOrigins = ['http://localhost:4173', 'http://localhost:5173', 'http://localhost:3000'];
-    const origin = req.headers.origin;
-    
-    if (allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-    }
-    
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', '*');
+    res.header('Access-Control-Allow-Methods', '*');
     res.header('Access-Control-Expose-Headers', 'X-Total-Count, X-Total-Pages');
     
+    // Handle OPTIONS method
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
