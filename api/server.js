@@ -1,24 +1,18 @@
-// See https://github.com/typicode/json-server#module
 const jsonServer = require('json-server');
 const jsonServerAuth = require('json-server-auth');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcrypt');
 
+// Crear router con datos en memoria
+const dbData = JSON.parse(fs.readFileSync(path.join(__dirname, '../db.json')));
+const router = jsonServer.router(dbData);
+
 const server = jsonServer.create();
-const router = jsonServer.router('db.json');
 const middlewares = jsonServer.defaults();
 
-// Middleware para asegurarse de que la colección "users" exista
-server.use((req, res, next) => {
-    if (!router.db.get('users').value()) {
-        router.db.set('users', []).write();
-    }
-    next();
-});
-
 // Inicializar la base de datos para json-server-auth
-server.db = router.db; // Necesario para json-server-auth
+server.db = router.db;
 
 // Cargar reglas de permisos desde routes.json
 const rules = jsonServerAuth.rewriter(JSON.parse(fs.readFileSync(path.join(__dirname, '../routes.json'))));
@@ -31,14 +25,13 @@ server.use((req, res, next) => {
     res.header('Access-Control-Allow-Methods', '*');
     res.header('Access-Control-Expose-Headers', 'X-Total-Count, X-Total-Pages');
     
-    // Handle OPTIONS method
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
     next();
 });
 
-server.use(rules); // Aplicar las reglas de permisos antes del router
+server.use(rules);
 server.use(jsonServer.rewriter({
     '/api/*': '/$1',
     '/blog/:resource/:id/show': '/:resource/:id'
@@ -46,14 +39,12 @@ server.use(jsonServer.rewriter({
 
 server.use(jsonServerAuth);
 
-// Middleware para calcular y devolver el número total de páginas en las solicitudes de productos
 server.use((req, res, next) => {
     if (req.method === 'GET' && req.path === '/products') {
         const totalItems = server.db.get('products').size().value();
         const limit = parseInt(req.query._limit, 10) || totalItems;
         const totalPages = Math.ceil(totalItems / limit);
-
-        res.setHeader('X-Total-Pages', totalPages); // Agregar encabezado con el total de páginas
+        res.setHeader('X-Total-Pages', totalPages);
     }
     next();
 });
@@ -81,9 +72,4 @@ server.post('/register', (req, res) => {
     res.status(201).json(newUser);
 });
 
-server.listen(3000, () => {
-    console.log('JSON Server is running');
-});
-
-// Export the Server API
 module.exports = server;
